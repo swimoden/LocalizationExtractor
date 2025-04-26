@@ -26,6 +26,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
+          token: ${{ secrets.GH_KEY }}
           generate_release_notes: false
           body: |
             # 🚀 Version ${{ github.ref_name }}
