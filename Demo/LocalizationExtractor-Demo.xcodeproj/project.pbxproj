@@ -23,6 +23,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1610CA842DBD4CAF0078FAA6 /* Release.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = Release.yml; sourceTree = "<group>"; };
 		16C5B5002DBC11CC00D83B94 /* LocalizationExtractor-CLI */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "LocalizationExtractor-CLI"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -46,9 +47,26 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1610CA822DBD4CA80078FAA6 /* workflows */ = {
+			isa = PBXGroup;
+			children = (
+				1610CA842DBD4CAF0078FAA6 /* Release.yml */,
+			);
+			path = workflows;
+			sourceTree = "<group>";
+		};
+		1610CA832DBD4CA80078FAA6 /* .github */ = {
+			isa = PBXGroup;
+			children = (
+				1610CA822DBD4CA80078FAA6 /* workflows */,
+			);
+			path = .github;
+			sourceTree = "<group>";
+		};
 		16C5B4F72DBC11CC00D83B94 = {
 			isa = PBXGroup;
 			children = (
+				1610CA832DBD4CA80078FAA6 /* .github */,
 				16C5B5022DBC11CC00D83B94 /* LocalizationExtractorCLI */,
 				16C5B5452DBCDBA500D83B94 /* Frameworks */,
 				16C5B5012DBC11CC00D83B94 /* Products */,
