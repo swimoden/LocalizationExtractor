@@ -1,0 +1,47 @@
+#
+#  Release.yml
+#  LocalizationExtractor
+#
+#  Created by mohammed souiden on 4/26/25.
+#
+
+name: Create GitHub Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: false
+          body: |
+            # 🚀 Version ${{ github.ref_name }}
+
+            **Release Date:** ${{ github.event.head_commit.timestamp }}
+
+            ---
+
+            ## ✨ Changes
+            - Auto-generated release from GitHub Actions.
+            - See commit history for detailed changes.
+
+            ---
+
+            ## 📦 Installation
+
+            ```swift
+            .package(url: "https://github.com/swimoden/LocalizationExtractor.git", from: "${{ github.ref_name }}")
+            ```
