@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		164B29742DBD38F700A54500 /* LocalizationExtractor in Frameworks */ = {isa = PBXBuildFile; productRef = 164B29732DBD38F700A54500 /* LocalizationExtractor */; };
 		164B299E2DBD3A9B00A54500 /* LocalizationExtractor in Frameworks */ = {isa = PBXBuildFile; productRef = 164B299D2DBD3A9B00A54500 /* LocalizationExtractor */; };
 /* End PBXBuildFile section */
 
@@ -21,32 +20,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
-		16C5B54A2DBCDBA500D83B94 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		16C5B5002DBC11CC00D83B94 /* LocalizationExtractor-CLI */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "LocalizationExtractor-CLI"; sourceTree = BUILT_PRODUCTS_DIR; };
-		16C5B52D2DBCCF5C00D83B94 /* LocalizationExtractor-GUI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "LocalizationExtractor-GUI.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		16C5B5022DBC11CC00D83B94 /* LocalizationExtractorCLI */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = LocalizationExtractorCLI;
-			sourceTree = "<group>";
-		};
-		16C5B52E2DBCCF5C00D83B94 /* LocalizationExtractorGUI */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = LocalizationExtractorGUI;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -60,14 +43,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		16C5B52A2DBCCF5C00D83B94 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				164B29742DBD38F700A54500 /* LocalizationExtractor in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -75,7 +50,6 @@
 			isa = PBXGroup;
 			children = (
 				16C5B5022DBC11CC00D83B94 /* LocalizationExtractorCLI */,
-				16C5B52E2DBCCF5C00D83B94 /* LocalizationExtractorGUI */,
 				16C5B5452DBCDBA500D83B94 /* Frameworks */,
 				16C5B5012DBC11CC00D83B94 /* Products */,
 			);
@@ -85,7 +59,6 @@
 			isa = PBXGroup;
 			children = (
 				16C5B5002DBC11CC00D83B94 /* LocalizationExtractor-CLI */,
-				16C5B52D2DBCCF5C00D83B94 /* LocalizationExtractor-GUI.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -123,30 +96,6 @@
 			productReference = 16C5B5002DBC11CC00D83B94 /* LocalizationExtractor-CLI */;
 			productType = "com.apple.product-type.tool";
 		};
-		16C5B52C2DBCCF5C00D83B94 /* LocalizationExtractor-GUI */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 16C5B5362DBCCF5E00D83B94 /* Build configuration list for PBXNativeTarget "LocalizationExtractor-GUI" */;
-			buildPhases = (
-				16C5B5292DBCCF5C00D83B94 /* Sources */,
-				16C5B52A2DBCCF5C00D83B94 /* Frameworks */,
-				16C5B52B2DBCCF5C00D83B94 /* Resources */,
-				16C5B54A2DBCDBA500D83B94 /* Embed Frameworks */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				16C5B52E2DBCCF5C00D83B94 /* LocalizationExtractorGUI */,
-			);
-			name = "LocalizationExtractor-GUI";
-			packageProductDependencies = (
-				164B29732DBD38F700A54500 /* LocalizationExtractor */,
-			);
-			productName = Localization;
-			productReference = 16C5B52D2DBCCF5C00D83B94 /* LocalizationExtractor-GUI.app */;
-			productType = "com.apple.product-type.application";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -158,9 +107,6 @@
 				LastUpgradeCheck = 1630;
 				TargetAttributes = {
 					16C5B4FF2DBC11CC00D83B94 = {
-						CreatedOnToolsVersion = 16.3;
-					};
-					16C5B52C2DBCCF5C00D83B94 = {
 						CreatedOnToolsVersion = 16.3;
 					};
 				};
@@ -183,30 +129,12 @@
 			projectRoot = "";
 			targets = (
 				16C5B4FF2DBC11CC00D83B94 /* LocalizationExtractor-CLI */,
-				16C5B52C2DBCCF5C00D83B94 /* LocalizationExtractor-GUI */,
 			);
 		};
 /* End PBXProject section */
 
-/* Begin PBXResourcesBuildPhase section */
-		16C5B52B2DBCCF5C00D83B94 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXResourcesBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
 		16C5B4FC2DBC11CC00D83B94 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		16C5B5292DBCCF5C00D83B94 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -352,56 +280,6 @@
 			};
 			name = Release;
 		};
-		16C5B5372DBCCF5E00D83B94 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = LocalizationExtractorGUI/Localization.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.svg.Localization;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Debug;
-		};
-		16C5B5382DBCCF5E00D83B94 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = LocalizationExtractorGUI/Localization.entitlements;
-				CODE_SIGN_STYLE = Automatic;
-				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/../Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.svg.Localization;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				REGISTER_APP_GROUPS = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -423,15 +301,6 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		16C5B5362DBCCF5E00D83B94 /* Build configuration list for PBXNativeTarget "LocalizationExtractor-GUI" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				16C5B5372DBCCF5E00D83B94 /* Debug */,
-				16C5B5382DBCCF5E00D83B94 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
@@ -442,10 +311,6 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		164B29732DBD38F700A54500 /* LocalizationExtractor */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = LocalizationExtractor;
-		};
 		164B299D2DBD3A9B00A54500 /* LocalizationExtractor */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = LocalizationExtractor;
