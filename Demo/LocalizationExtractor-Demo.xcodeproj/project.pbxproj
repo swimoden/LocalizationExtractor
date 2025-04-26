@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1610CA552DBD451F0078FAA6 /* LocalizationExtractor in Frameworks */ = {isa = PBXBuildFile; productRef = 1610CA542DBD451F0078FAA6 /* LocalizationExtractor */; };
 		164B29742DBD38F700A54500 /* LocalizationExtractor in Frameworks */ = {isa = PBXBuildFile; productRef = 164B29732DBD38F700A54500 /* LocalizationExtractor */; };
 		164B299E2DBD3A9B00A54500 /* LocalizationExtractor in Frameworks */ = {isa = PBXBuildFile; productRef = 164B299D2DBD3A9B00A54500 /* LocalizationExtractor */; };
 /* End PBXBuildFile section */
@@ -65,7 +64,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1610CA552DBD451F0078FAA6 /* LocalizationExtractor in Frameworks */,
 				164B29742DBD38F700A54500 /* LocalizationExtractor in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -144,7 +142,6 @@
 			name = "LocalizationExtractor-GUI";
 			packageProductDependencies = (
 				164B29732DBD38F700A54500 /* LocalizationExtractor */,
-				1610CA542DBD451F0078FAA6 /* LocalizationExtractor */,
 			);
 			productName = Localization;
 			productReference = 16C5B52D2DBCCF5C00D83B94 /* LocalizationExtractor-GUI.app */;
@@ -178,7 +175,7 @@
 			mainGroup = 16C5B4F72DBC11CC00D83B94;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				1610CA532DBD451F0078FAA6 /* XCRemoteSwiftPackageReference "LocalizationExtractor" */,
+				164B299C2DBD3A9B00A54500 /* XCLocalSwiftPackageReference "../../LocalizationExtractor" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 16C5B5012DBC11CC00D83B94 /* Products */;
@@ -437,23 +434,14 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		1610CA532DBD451F0078FAA6 /* XCRemoteSwiftPackageReference "LocalizationExtractor" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/swimoden/LocalizationExtractor";
-			requirement = {
-				branch = main;
-				kind = branch;
-			};
+/* Begin XCLocalSwiftPackageReference section */
+		164B299C2DBD3A9B00A54500 /* XCLocalSwiftPackageReference "../../LocalizationExtractor" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../LocalizationExtractor;
 		};
-/* End XCRemoteSwiftPackageReference section */
+/* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		1610CA542DBD451F0078FAA6 /* LocalizationExtractor */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1610CA532DBD451F0078FAA6 /* XCRemoteSwiftPackageReference "LocalizationExtractor" */;
-			productName = LocalizationExtractor;
-		};
 		164B29732DBD38F700A54500 /* LocalizationExtractor */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = LocalizationExtractor;
