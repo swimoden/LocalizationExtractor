@@ -1,11 +1,19 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
+
 import Foundation
 
+/// A utility engine to scan Swift files, extract localization keys, and update `.strings` localization files.
 public class LocalizationExtractorEngine {
 
     // MARK: - Scanning Swift Files
 
+    /// Recursively scans the given directory path for `.swift` files.
+    ///
+    /// - Parameters:
+    ///   - path: The root directory path to start scanning.
+    ///   - log: Optional logging closure for debug information.
+    /// - Returns: An array of file paths for all `.swift` files found.
     public static func getSwiftFiles(at path: String, log: ((String) -> Void)? = nil) -> [String] {
         var swiftFiles: [String] = []
 
@@ -37,6 +45,13 @@ public class LocalizationExtractorEngine {
 
     // MARK: - Extracting Localized Keys
 
+    /// Extracts localization keys from the given Swift file content using provided regex patterns.
+    ///
+    /// - Parameters:
+    ///   - fileContent: The text content of a Swift file.
+    ///   - patterns: An array of regular expression patterns to identify localization keys.
+    ///   - log: Optional logging closure for debug information.
+    /// - Returns: A set of extracted localization keys.
     public static func extractLocalizedKeys(from fileContent: String, patterns: [String], log: ((String) -> Void)? = nil) -> Set<String> {
         var results = Set<String>()
         for pattern in patterns {
@@ -62,6 +77,10 @@ public class LocalizationExtractorEngine {
 
     // MARK: - Loading Existing Translations
 
+    /// Loads existing key-value pairs from a `.strings` localization file.
+    ///
+    /// - Parameter path: The file system path to the `.strings` file.
+    /// - Returns: A dictionary containing existing translation keys and values.
     public static func loadExistingTranslations(from path: String) -> [String: String] {
         guard let content = try? String(contentsOfFile: path, encoding: .utf8) else { return [:] }
         var translations = [String: String]()
@@ -84,6 +103,15 @@ public class LocalizationExtractorEngine {
 
     // MARK: - Main Extraction Entry
 
+    /// Executes the full localization extraction process.
+    ///
+    /// - Parameters:
+    ///   - projectPath: The path to the Swift project source code.
+    ///   - localizationBaseURL: The base URL where localization directories are located.
+    ///   - localizationFolders: A list of localization subdirectories (e.g., `["en.lproj", "fr.lproj"]`).
+    ///   - localizationFileName: The filename of the `.strings` file (usually `"Localizable.strings"`).
+    ///   - patterns: The regex patterns used to detect localization keys.
+    ///   - log: Closure to handle logging messages.
     public static func runExtraction(
         projectPath: String,
         localizationBaseURL: URL,
