@@ -27,6 +27,37 @@ The compiled executable will be located at:
 .build/release/LocalizationExtractorCLI
 ```
 
+## Using as a Swift Package
+
+You can also use the core `LocalizationExtractor` engine as a Swift Package in your own projects.
+
+Add the dependency in your `Package.swift`:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/YOUR_USERNAME/LocalizationExtractor.git", from: "1.0.0")
+]
+```
+
+And add it as a dependency to your target:
+
+```swift
+.target(
+    name: "YourAppOrTool",
+    dependencies: [
+        .product(name: "LocalizationExtractor", package: "LocalizationExtractor")
+    ]
+)
+```
+
+Then simply import and use it in your Swift files:
+
+```swift
+import LocalizationExtractor
+
+let keys = LocalizationExtractorEngine.extractLocalizedKeys(from: fileContent, patterns: ["\"([^\"]+)\"\\s*\\.localized"])
+```
+
 ## Usage
 
 Run the CLI:
@@ -96,4 +127,3 @@ This project is licensed under the [MIT License](https://github.com/swimoden/Loc
 ## Contributions
 
 Pull requests are welcome! Feel free to fork, open issues, or suggest improvements.
-
