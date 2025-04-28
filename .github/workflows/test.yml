@@ -1,0 +1,36 @@
+#
+#  Release.yml
+#  LocalizationExtractor
+#
+#  Created by mohammed souiden on 4/26/25.
+#
+
+name: Run Swift Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: '5.9'
+
+      - name: Build Package
+        run: swift build -v
+
+      - name: Run Tests
+        run: swift test -v
