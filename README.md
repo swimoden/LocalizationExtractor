@@ -60,33 +60,6 @@ import LocalizationExtractor
 let keys = LocalizationExtractorEngine.extractLocalizedKeys(from: fileContent, patterns: ["\"([^\"]+)\"\\s*\\.localized"])
 ```
 
-## Usage
-
-Run the CLI:
-
-```bash
-.build/release/LocalizationExtractorCLI
-```
-
-You will be interactively prompted for:
-
-- Project path
-- Localization directories (comma-separated)
-- Localization file name (`Localizable.strings` by default)
-- Example of localization usage (used to generate regex patterns automatically)
-- Whether to include comments in the `.strings` file
-- Localization base path
-
-Example session:
-
-```
-Enter project path (default: /Users/you/Projects/MyApp):
-Enter localization directories (default: en.lproj,fr.lproj,ar.lproj):
-Enter localization file name (default: Localizable.strings):
-Enter localization regex patterns (or press Enter to use defaults):
-Enter localization base path (default: /Users/you/Projects/MyApp/Resources/Localization):
-```
-
 ## Pattern Generation
 
 Instead of requiring users to write raw regex, the CLI allows you to enter an example of your localization usage. For example:
@@ -101,6 +74,34 @@ If no example is entered, the following default pattern is used:
 
 ```
 NSLocalizedString\(\s*"([^\"]+)"
+```
+
+## Usage
+
+Run the CLI:
+
+```bash
+.build/release/LocalizationExtractorCLI
+```
+
+You will be interactively prompted for:
+
+- Project path
+- Localization directories (comma-separated)
+- Localization file name (`Localizable.strings` by default)
+- Example of your localization usage (to auto-generate regex patterns)
+- Whether to include comments in the `.strings` file
+- Localization base path
+
+Example session:
+
+```
+Enter project path (default: /Users/you/Projects/MyApp):
+Enter localization directories (default: en.lproj,fr.lproj,ar.lproj):
+Enter localization file name (default: Localizable.strings):
+Enter an example of your localization usage (e.g., NSLocalizedString("key", comment: "comment")) or press Enter to use defaults:
+Include comments in .strings file? (yes/no) (default: yes):
+Enter localization base path (default: /Users/you/Projects/MyApp/Resources/Localization):
 ```
 
 ## Example
