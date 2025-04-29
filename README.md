@@ -10,6 +10,8 @@ LocalizationExtractorCLI is a Swift command-line tool to scan Swift project file
 - Preserves existing translations
 - Fully interactive CLI prompts
 - Lightweight and fast
+- Dynamically generates regex patterns from a sample localization call
+- Option to include comments in the generated `.strings` file
 
 ## Installation
 
@@ -71,7 +73,8 @@ You will be interactively prompted for:
 - Project path
 - Localization directories (comma-separated)
 - Localization file name (`Localizable.strings` by default)
-- Regex patterns for extraction
+- Example of localization usage (used to generate regex patterns automatically)
+- Whether to include comments in the `.strings` file
 - Localization base path
 
 Example session:
@@ -84,16 +87,21 @@ Enter localization regex patterns (or press Enter to use defaults):
 Enter localization base path (default: /Users/you/Projects/MyApp/Resources/Localization):
 ```
 
-## Default Regex Patterns
+## Pattern Generation
 
-If you press Enter without customizing, these patterns are used:
+Instead of requiring users to write raw regex, the CLI allows you to enter an example of your localization usage. For example:
 
 ```
-"([^\"]+)"\s*\n*\s*\.localized
+"submit_button".localized(comment: "Title for the submit button")
+```
+
+From this, the tool will automatically generate an appropriate regex pattern for extracting localization keys and comments.
+
+If no example is entered, the following default pattern is used:
+
+```
 NSLocalizedString\(\s*"([^\"]+)"
 ```
-
-These cover Swift `.localized` extensions and `NSLocalizedString` API calls.
 
 ## Example
 
