@@ -24,7 +24,7 @@ let package = Package(
         ),
         .testTarget(
             name: "LocalizationExtractorTests",
-            dependencies: ["LocalizationExtractor"],
+            dependencies: ["LocalizationExtractor"]
         ),
     ]
 )
