@@ -1,5 +1,3 @@
-// The Swift Programming Language
-// https://docs.swift.org/swift-book
 
 import Foundation
 
@@ -75,6 +73,48 @@ public class LocalizationExtractorEngine {
         return results
     }
 
+    /// Extracts localization keys and associated comments from Swift file content.
+    ///
+    /// - Parameters:
+    ///   - fileContent: The text content of a Swift file.
+    ///   - patterns: An array of regex patterns that capture key and comment.
+    ///   - log: Optional logger.
+    /// - Returns: Dictionary where keys are localization keys and values are extracted comments.
+    public static func extractLocalizedKeysAndComments(from fileContent: String, patterns: [String], log: ((String) -> Void)? = nil) -> [String: String] {
+        var results = [String: String]()
+
+        for pattern in patterns {
+            log?("🔵 Using regex pattern: \(pattern)")
+
+            if let regex = try? NSRegularExpression(pattern: pattern) {
+                let nsrange = NSRange(fileContent.startIndex..<fileContent.endIndex, in: fileContent)
+                let matches = regex.matches(in: fileContent, range: nsrange)
+                log?("🔎 Matches found: \(matches.count)")
+
+                for match in matches {
+                    if let keyRange = Range(match.range(at: 1), in: fileContent) {
+                        let key = String(fileContent[keyRange])
+                        var comment = key // fallback to key itself
+
+                        if match.numberOfRanges >= 3, let commentRange = Range(match.range(at: 2), in: fileContent) {
+                            let extractedComment = String(fileContent[commentRange])
+                            comment = extractedComment.isEmpty ? key : extractedComment
+                        } else {
+                            comment = key
+                        }
+
+                        results[key] = comment
+                        log?("🟢 Key extracted: \(key) with comment: \(comment)")
+                    }
+                }
+            } else {
+                log?("❌ Invalid regex: \(pattern)")
+            }
+        }
+
+        return results
+    }
+
     // MARK: - Loading Existing Translations
 
     /// Loads existing key-value pairs from a `.strings` localization file.
@@ -111,6 +151,7 @@ public class LocalizationExtractorEngine {
     ///   - localizationFolders: A list of localization subdirectories (e.g., `["en.lproj", "fr.lproj"]`).
     ///   - localizationFileName: The filename of the `.strings` file (usually `"Localizable.strings"`).
     ///   - patterns: The regex patterns used to detect localization keys.
+    ///   - includeComments: Flag indicating whether to extract comments along with keys.
     ///   - log: Closure to handle logging messages.
     public static func runExtraction(
         projectPath: String,
@@ -118,8 +159,11 @@ public class LocalizationExtractorEngine {
         localizationFolders: [String],
         localizationFileName: String,
         patterns: [String],
+        includeComments: Bool,
         log: @escaping (String) -> Void
     ) {
+        var extractedComments = [String: String]()
+
         guard !projectPath.isEmpty else {
             log("❗ Please select a project path first.")
             return
@@ -137,8 +181,16 @@ public class LocalizationExtractorEngine {
         for filePath in swiftFiles {
             if let content = try? String(contentsOfFile: filePath, encoding: .utf8) {
                 let fileName = URL(fileURLWithPath: filePath).lastPathComponent
-                let keys = extractLocalizedKeys(from: content, patterns: patterns, log: log)
-                keysGroupedByFile[fileName, default: []].formUnion(keys)
+                if includeComments {
+                    let keyComments = extractLocalizedKeysAndComments(from: content, patterns: patterns, log: log)
+                    for (key, comment) in keyComments {
+                        keysGroupedByFile[fileName, default: []].insert(key)
+                        extractedComments[key] = comment
+                    }
+                } else {
+                    let keys = extractLocalizedKeys(from: content, patterns: patterns, log: log)
+                    keysGroupedByFile[fileName, default: []].formUnion(keys)
+                }
             }
         }
 
@@ -155,7 +207,12 @@ public class LocalizationExtractorEngine {
                 lines.append("\n/* ===== \(fileName) ===== */")
                 for key in keys.sorted() {
                     let value = existingTranslations[key] ?? key
-                    lines.append("\"\(key)\" = \"\(value)\";")
+                    if includeComments {
+                        let comment = extractedComments[key] ?? key
+                        lines.append("/* \(comment) */\n\"\(key)\" = \"\(value)\";")
+                    } else {
+                        lines.append("\"\(key)\" = \"\(value)\";")
+                    }
                 }
             }
 

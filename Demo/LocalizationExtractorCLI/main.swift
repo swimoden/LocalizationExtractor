@@ -18,18 +18,25 @@ let localizationDirectories = localizationDirectoriesInput.components(separatedB
 
 let localizationFileName = prompt("Enter localization file name", defaultValue: "Localizable.strings")
 
-let defaultPatterns = [
-    #""([^"]+)"\s*\n*\s*\.localized"#,
-    #"NSLocalizedString\(\s*"([^"]+)"#,
-]
-
-let localizationPatternsInput = prompt(
-    "Enter localization regex patterns (comma-separated or press Enter to use default patterns)",
-    defaultValue: defaultPatterns.joined(separator: ",")
+let localizationExampleInput = prompt(
+    "Enter an example of your localization usage (e.g., NSLocalizedString(\"key\", comment: \"...\")) or press Enter to use default",
+    defaultValue: #"NSLocalizedString("key", comment: "comment")"#
 )
-let localizationPattern = localizationPatternsInput.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+let localizationPattern: [String]
+if localizationExampleInput.isEmpty {
+    localizationPattern = [
+        #"NSLocalizedString\(\s*"([^"]+)"#
+    ]
+} else {
+    localizationPattern = LocalizationRegexGenerator.generatePatterns(from: localizationExampleInput)
+}
+print("🔵 Patterns: \(localizationPattern.joined(separator: "\n"))")
 
 let localizationBasePath = prompt("Enter localization base path", defaultValue: "\(projectPath)/Resources/Localization")
+
+let includeCommentsInput = prompt("Include comments in .strings file? (yes/no)", defaultValue: "yes")
+let includeComments = includeCommentsInput.lowercased().starts(with: "y")
 
 func main() {
     LocalizationExtractorEngine.runExtraction(
@@ -38,6 +45,7 @@ func main() {
         localizationFolders: localizationDirectories,
         localizationFileName: localizationFileName,
         patterns: localizationPattern,
+        includeComments: includeComments,
         log: { print($0) }
     )
 }
