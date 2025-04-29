@@ -26,24 +26,5 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          token: ${{ secrets.GH_KEY_LOC }}
-          generate_release_notes: false
-          body: |
-            # 🚀 Version ${{ github.ref_name }}
-
-            **Release Date:** ${{ github.event.head_commit.timestamp }}
-
-            ---
-
-            ## ✨ Changes
-            - Auto-generated release from GitHub Actions.
-            - See commit history for detailed changes.
-
-            ---
-
-            ## 📦 Installation
-
-            ```swift
-            .package(url: "https://github.com/swimoden/LocalizationExtractor.git", from: "${{ github.ref_name }}")
-            ```
-
+          token: ${{ secrets.GITHUB_TOKEN }}
+          generate_release_notes: true

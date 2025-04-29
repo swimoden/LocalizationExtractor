@@ -1,0 +1,26 @@
+#
+#  Release.yml
+#  LocalizationExtractor
+#
+#  Created by mohammed souiden on 4/29/25.
+#
+
+feature:
+  - Sources/**/*.swift
+  - Sources/**/**/*.swift
+
+fix:
+  - "**/*.swift"
+  - "!Tests/**"
+
+chore:
+  - .github/**
+  - "**/*.yml"
+  - "**/*.yaml"
+
+docs:
+  - README.md
+  - "**/*.md"
+
+test:
+  - Tests/**
