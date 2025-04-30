@@ -4,6 +4,11 @@ import Foundation
 public class LocalizationExtractorEngine {
 
     public struct KeyChangeSummary: Sendable {
+        public init(new: [String] = [], missing: [String] = [], changed: [String] = []) {
+            self.new = new
+            self.missing = missing
+            self.changed = changed
+        }
         public let new: [String]
         public let missing: [String]
         public let changed: [String]
