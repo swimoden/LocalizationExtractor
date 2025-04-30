@@ -154,7 +154,7 @@ public class LocalizationExtractorEngine {
 
     // MARK: - Key Changes Analysis
 
-    private static func analyzeKeyChanges(
+    public static func analyzeKeyChanges(
         extractedKeys: Set<String>,
         existingTranslations: [String: String]
     ) -> KeyChangeSummary {

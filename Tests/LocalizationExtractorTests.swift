@@ -80,3 +80,22 @@ import Foundation
         #expect(generated == expected, "Failed for example: \(example)")
     }
 }
+
+@Test func testAnalyzeKeyChanges() async throws {
+    let existingTranslations = [
+        "hello": "Hello",
+        "bye": "Goodbye",
+        "unused": "Unused"
+    ]
+
+    let extractedKeys: Set<String> = ["hello", "welcome", "bye", "new_key"]
+
+    let result = LocalizationExtractorEngine.analyzeKeyChanges(
+        extractedKeys: extractedKeys,
+        existingTranslations: existingTranslations
+    )
+
+    #expect(result.new.sorted() == ["new_key", "welcome"])
+    #expect(result.missing.sorted() == ["unused"])
+    #expect(result.changed.sorted() == ["bye", "hello"])
+}
