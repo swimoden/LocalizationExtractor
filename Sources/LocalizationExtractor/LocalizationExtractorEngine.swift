@@ -1,8 +1,19 @@
-
 import Foundation
 
 /// A utility engine to scan Swift files, extract localization keys, and update `.strings` localization files.
 public class LocalizationExtractorEngine {
+
+    public struct KeyChangeSummary: Sendable {
+        public let new: [String]
+        public let missing: [String]
+        public let changed: [String]
+    }
+
+    private static let keyChangeStore = KeyChangeStore()
+
+    public static func lastKeyChanges() async -> KeyChangeSummary {
+        await keyChangeStore.get()
+    }
 
     // MARK: - Scanning Swift Files
 
@@ -141,6 +152,25 @@ public class LocalizationExtractorEngine {
         return translations
     }
 
+    // MARK: - Key Changes Analysis
+
+    private static func analyzeKeyChanges(
+        extractedKeys: Set<String>,
+        existingTranslations: [String: String]
+    ) -> KeyChangeSummary {
+        let existingKeys = Set(existingTranslations.keys)
+        let newKeys = extractedKeys.subtracting(existingKeys)
+        let missingKeys = existingKeys.subtracting(extractedKeys)
+        let changedKeys = extractedKeys.intersection(existingKeys).filter { key in
+            return existingTranslations[key] != key
+        }
+        return KeyChangeSummary(
+            new: Array(newKeys).sorted(),
+            missing: Array(missingKeys).sorted(),
+            changed: Array(changedKeys).sorted()
+        )
+    }
+
     // MARK: - Main Extraction Entry
 
     /// Executes the full localization extraction process.
@@ -195,7 +225,21 @@ public class LocalizationExtractorEngine {
         }
 
         let allKeys = keysGroupedByFile.values.flatMap { $0 }
+        let allKeysSet = Set(allKeys)
         log("🟢 Extracted \(allKeys.count) unique localizable keys.")
+
+        if let firstLangDir = localizationFolders.first {
+            let langDirURL = localizationBaseURL.appendingPathComponent(firstLangDir)
+            let localizationFileURL = langDirURL.appendingPathComponent(localizationFileName)
+            let existingTranslations = loadExistingTranslations(from: localizationFileURL.path)
+            Task {
+                await keyChangeStore.set(analyzeKeyChanges(extractedKeys: allKeysSet, existingTranslations: existingTranslations))
+            }
+        } else {
+            Task {
+                await keyChangeStore.set(.init(new: [], missing: [], changed: []))
+            }
+        }
 
         for langDir in localizationFolders {
             let langDirURL = localizationBaseURL.appendingPathComponent(langDir)
@@ -226,5 +270,17 @@ public class LocalizationExtractorEngine {
             }
         }
         log("✅ Extraction completed at \(Date()).")
+    }
+}
+
+actor KeyChangeStore {
+    private var value: LocalizationExtractorEngine.KeyChangeSummary = .init(new: [], missing: [], changed: [])
+
+    func get() -> LocalizationExtractorEngine.KeyChangeSummary {
+        return value
+    }
+
+    func set(_ newValue: LocalizationExtractorEngine.KeyChangeSummary) {
+        value = newValue
     }
 }

@@ -5,7 +5,6 @@
 //  Created by mohammed souiden on 4/29/25.
 //
 
-
 /// A utility to dynamically generate regex patterns based on a localization example input.
 public struct LocalizationRegexGenerator {
     public static func generatePatterns(from example: String) -> [String] {
