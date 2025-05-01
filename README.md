@@ -1,6 +1,6 @@
 # LocalizationExtractorCLI
 
-LocalizationExtractorCLI is a Swift command-line tool to scan Swift project files, extract localization keys, and update `.strings` localization files automatically. It helps keep localization keys organized, avoids missing translations, and integrates easily into any project workflow.
+LocalizationExtractorCLI is a Swift command-line tool to scan Swift project files, extract localization keys, and update `.strings` localization files automatically. It helps keep localization keys organized, avoids missing translations, detects changes to developer comments, excludes `.stringsdict` keys, and integrates easily into any project workflow.
 
 ## Features
 
@@ -12,6 +12,8 @@ LocalizationExtractorCLI is a Swift command-line tool to scan Swift project file
 - Lightweight and fast
 - Dynamically generates regex patterns from a sample localization call
 - Option to include comments in the generated `.strings` file
+- Detects and excludes `.stringsdict` keys
+- Detects changes to developer comments
 
 ## Installation
 
@@ -62,15 +64,21 @@ let keys = LocalizationExtractorEngine.extractLocalizedKeys(from: fileContent, p
 
 ## Pattern Generation
 
-Instead of requiring users to write raw regex, the CLI allows you to enter an example of your localization usage. For example:
+The CLI supports advanced pattern detection. You can enter one or more examples of how your project performs localization, and it will generate the appropriate regex patterns. Examples:
 
 ```
-"submit_button".localized(comment: "Title for the submit button")
+"submit_button".localized(comment: "Submit")
+NSLocalizedString("cancel", comment: "Cancel button")
+L10n.alert.title
 ```
 
-From this, the tool will automatically generate an appropriate regex pattern for extracting localization keys and comments.
+The engine supports:
+- `.localized(comment:)`, `.localized("comment")`, `.localized`
+- `NSLocalizedString(...)` with and without comments
+- `MKLocalizedString(...)`, or any variant ending in `LocalizedString(...)`
+- SwiftGen-style `L10n.key.path`
 
-If no example is entered, the following default pattern is used:
+If no example is entered, the following fallback default is used:
 
 ```
 NSLocalizedString\(\s*"([^\"]+)"
@@ -84,13 +92,14 @@ Run the CLI:
 .build/release/LocalizationExtractorCLI
 ```
 
-You will be interactively prompted for:
+You will be prompted for:
 
 - Project path
-- Localization directories (comma-separated)
+- Localization directories (comma-separated, or auto-detected)
 - Localization file name (`Localizable.strings` by default)
-- Example of your localization usage (to auto-generate regex patterns)
-- Whether to include comments in the `.strings` file
+- Example(s) of your localization usage (auto-generates regex patterns)
+- Whether to include developer comments in the `.strings` file
+- Whether to auto-detect localization folders (from `.lproj` suffixes)
 - Localization base path
 
 Example session:
@@ -101,8 +110,15 @@ Enter localization directories (default: en.lproj,fr.lproj,ar.lproj):
 Enter localization file name (default: Localizable.strings):
 Enter an example of your localization usage (e.g., NSLocalizedString("key", comment: "comment")) or press Enter to use defaults:
 Include comments in .strings file? (yes/no) (default: yes):
+Auto-detect localization folders? (yes/no) (default: yes):
 Enter localization base path (default: /Users/you/Projects/MyApp/Resources/Localization):
 ```
+
+## .stringsdict Support
+
+The extractor automatically detects and excludes keys already defined in `.stringsdict` files to avoid duplicating pluralized or formatted keys.
+
+It also supports detection of `.stringsdict` files and analyzes localization coverage cleanly.
 
 ## Example
 
