@@ -14,7 +14,6 @@ let projectPath = prompt("Enter project path", defaultValue: FileManager.default
 print("🔵 Project path: \(projectPath)")
 
 let localizationDirectoriesInput = prompt("Enter localization directories (comma-separated)", defaultValue: "en.lproj,fr.lproj,ar.lproj")
-let localizationDirectories = localizationDirectoriesInput.components(separatedBy: ",")
 
 let localizationFileName = prompt("Enter localization file name", defaultValue: "Localizable.strings")
 
@@ -29,11 +28,28 @@ if localizationExampleInput.isEmpty {
         #"NSLocalizedString\(\s*"([^"]+)"#
     ]
 } else {
-    localizationPattern = LocalizationRegexGenerator.generatePatterns(from: localizationExampleInput)
+    let generated = LocalizationRegexGenerator.generatePatterns(from: localizationExampleInput)
+    if generated.isEmpty {
+        print("⚠️ No patterns detected. Falling back to default.")
+        localizationPattern = [#"NSLocalizedString\(\s*"([^"]+)"#]
+    } else {
+        localizationPattern = generated
+    }
 }
 print("🔵 Patterns: \(localizationPattern.joined(separator: "\n"))")
 
 let localizationBasePath = prompt("Enter localization base path", defaultValue: "\(projectPath)/Resources/Localization")
+
+let autoDetectInput = prompt("Auto-detect localization folders from base path? (yes/no)", defaultValue: "yes")
+let autoDetectLanguages = autoDetectInput.lowercased().starts(with: "y")
+
+let localizationDirectories: [String]
+if autoDetectLanguages {
+    localizationDirectories = LocalizationExtractorEngine.detectLocalizationLanguages(at: localizationBasePath)
+    print("✅ Detected localization directories: \(localizationDirectories.joined(separator: ", "))")
+} else {
+    localizationDirectories = localizationDirectoriesInput.components(separatedBy: ",")
+}
 
 let includeCommentsInput = prompt("Include comments in .strings file? (yes/no)", defaultValue: "yes")
 let includeComments = includeCommentsInput.lowercased().starts(with: "y")

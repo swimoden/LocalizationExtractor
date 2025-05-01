@@ -1,17 +1,27 @@
+//
+//  LocalizationExtractorEngine.swift
+//  LocalizationExtractor
+//
+//  Created by mohammed souiden on 4/25/25.
+//
+
+
 import Foundation
 
 /// A utility engine to scan Swift files, extract localization keys, and update `.strings` localization files.
 public class LocalizationExtractorEngine {
 
     public struct KeyChangeSummary: Sendable {
-        public init(new: [String] = [], missing: [String] = [], changed: [String] = []) {
+        public init(new: [String] = [], missing: [String] = [], changed: [String] = [], stringsdict: [String] = []) {
             self.new = new
             self.missing = missing
             self.changed = changed
+            self.stringsdict = stringsdict
         }
         public let new: [String]
         public let missing: [String]
         public let changed: [String]
+        public let stringsdict: [String]
     }
 
     private static let keyChangeStore = KeyChangeStore()
@@ -156,18 +166,51 @@ public class LocalizationExtractorEngine {
         }
         return translations
     }
-
+    /// Loads all keys from `.stringsdict` files in the given localization base directory.
+    ///
+    /// - Parameter path: The path to the localization base directory.
+    /// - Returns: A set of all keys found in `.stringsdict` files.
+    public static func loadStringsdictKeys(at path: String) -> Set<String> {
+        var keys = Set<String>()
+        let fileManager = FileManager.default
+        if let enumerator = fileManager.enumerator(atPath: path) {
+            for case let file as String in enumerator {
+                if file.hasSuffix(".stringsdict") {
+                    let fullPath = (path as NSString).appendingPathComponent(file)
+                    if let dict = NSDictionary(contentsOfFile: fullPath) as? [String: Any] {
+                        keys.formUnion(dict.keys)
+                    }
+                }
+            }
+        }
+        return keys
+    }
     // MARK: - Key Changes Analysis
 
     public static func analyzeKeyChanges(
         extractedKeys: Set<String>,
-        existingTranslations: [String: String]
+        existingTranslations: [String: String],
+        extractedComments: [String: String]? = nil,
+        existingComments: [String: String]? = nil
     ) -> KeyChangeSummary {
         let existingKeys = Set(existingTranslations.keys)
         let newKeys = extractedKeys.subtracting(existingKeys)
         let missingKeys = existingKeys.subtracting(extractedKeys)
         let changedKeys = extractedKeys.intersection(existingKeys).filter { key in
-            return existingTranslations[key] != key
+            let oldValue = existingTranslations[key]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let newValue = key.trimmingCharacters(in: .whitespacesAndNewlines)
+
+            let valueChanged = oldValue != newValue
+
+            let commentChanged: Bool
+            if let extractedComments, let newComment = extractedComments[key] {
+                let existingComment = existingComments?[key]
+                commentChanged = existingComment != newComment
+            } else {
+                commentChanged = false
+            }
+
+            return valueChanged || commentChanged
         }
         return KeyChangeSummary(
             new: Array(newKeys).sorted(),
@@ -176,6 +219,34 @@ public class LocalizationExtractorEngine {
         )
     }
 
+    /// Loads existing comments from a `.strings` localization file.
+    ///
+    /// - Parameter path: The file system path to the `.strings` file.
+    /// - Returns: A dictionary containing keys and their associated comments.
+    public static func loadExistingComments(from path: String) -> [String: String] {
+        guard let content = try? String(contentsOfFile: path, encoding: .utf8) else { return [:] }
+
+        var commentMap: [String: String] = [:]
+
+        let pattern = #"/\*\s*(.*?)\s*\*/\s*"([^"]+)"\s*=\s*"[^"]*"\s*;"#
+
+        if let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]) {
+            let nsrange = NSRange(content.startIndex..<content.endIndex, in: content)
+            let matches = regex.matches(in: content, range: nsrange)
+
+            for match in matches {
+                if match.numberOfRanges >= 3,
+                   let commentRange = Range(match.range(at: 1), in: content),
+                   let keyRange = Range(match.range(at: 2), in: content) {
+                    let comment = String(content[commentRange])
+                    let key = String(content[keyRange])
+                    commentMap[key] = comment
+                }
+            }
+        }
+
+        return commentMap
+    }
     // MARK: - Main Extraction Entry
 
     /// Executes the full localization extraction process.
@@ -219,7 +290,7 @@ public class LocalizationExtractorEngine {
                 if includeComments {
                     let keyComments = extractLocalizedKeysAndComments(from: content, patterns: patterns, log: log)
                     for (key, comment) in keyComments {
-                        keysGroupedByFile[fileName, default: []].insert(key)
+                        keysGroupedByFile[fileName, default: []].update(with: key)
                         extractedComments[key] = comment
                     }
                 } else {
@@ -230,15 +301,28 @@ public class LocalizationExtractorEngine {
         }
 
         let allKeys = keysGroupedByFile.values.flatMap { $0 }
-        let allKeysSet = Set(allKeys)
-        log("🟢 Extracted \(allKeys.count) unique localizable keys.")
-
+        let stringsdictKeys = loadStringsdictKeys(at: localizationBaseURL.path)
+        let filteredKeys = allKeys.filter { !stringsdictKeys.contains($0) }
+        log("🟢 Extracted \(filteredKeys.count) keys.")
         if let firstLangDir = localizationFolders.first {
             let langDirURL = localizationBaseURL.appendingPathComponent(firstLangDir)
             let localizationFileURL = langDirURL.appendingPathComponent(localizationFileName)
             let existingTranslations = loadExistingTranslations(from: localizationFileURL.path)
+            let existingComments = loadExistingComments(from: localizationFileURL.path)
             Task {
-                await keyChangeStore.set(analyzeKeyChanges(extractedKeys: allKeysSet, existingTranslations: existingTranslations))
+                await keyChangeStore.set(
+                    KeyChangeSummary(
+                        new: filteredKeys.filter { !existingTranslations.keys.contains($0) },
+                        missing: existingTranslations.keys.filter { !filteredKeys.contains($0) },
+                        changed: analyzeKeyChanges(
+                            extractedKeys: Set(filteredKeys),
+                            existingTranslations: existingTranslations,
+                            extractedComments: extractedComments,
+                            existingComments: existingComments
+                        ).changed,
+                        stringsdict: Array(stringsdictKeys).sorted()
+                    )
+                )
             }
         } else {
             Task {
@@ -254,7 +338,7 @@ public class LocalizationExtractorEngine {
 
             for (fileName, keys) in keysGroupedByFile.sorted(by: { $0.key < $1.key }) where !keys.isEmpty {
                 lines.append("\n/* ===== \(fileName) ===== */")
-                for key in keys.sorted() {
+                for key in keys.sorted().filter({ !stringsdictKeys.contains($0) }) {
                     let value = existingTranslations[key] ?? key
                     if includeComments {
                         let comment = extractedComments[key] ?? key
@@ -275,6 +359,23 @@ public class LocalizationExtractorEngine {
             }
         }
         log("✅ Extraction completed at \(Date()).")
+    }
+    // TODO: ADD Tests
+    /// Detects localization languages by scanning the given base path for folders ending in `.lproj`.
+    ///
+    /// - Parameter basePath: The path to the localization base directory.
+    /// - Returns: An array of folder names matching the `.lproj` pattern (e.g., `en.lproj`, `fr.lproj`).
+    public static func detectLocalizationLanguages(at basePath: String) -> [String] {
+        do {
+            let url = URL(fileURLWithPath: basePath)
+            let contents = try FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])
+            let lprojDirs = contents
+                .filter { $0.pathExtension == "lproj" }
+                .map { $0.lastPathComponent }
+            return lprojDirs
+        } catch {
+            return []
+        }
     }
 }
 
