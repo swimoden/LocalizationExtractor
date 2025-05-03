@@ -5,11 +5,30 @@
 //  Created by mohammed souiden on 4/25/25.
 //
 
-
 import Foundation
 
 /// A utility engine to scan Swift files, extract localization keys, and update `.strings` localization files.
 public class LocalizationExtractorEngine {
+
+    /// Stores the summary of key changes for a language, including all four types.
+    public struct FileLanguageChangeLog: Sendable {
+        public init(language: String,
+                    new: [String],
+                    missing: [String],
+                    changed: [String],
+                    stringsdict: [String]) {
+            self.language = language
+            self.new = new
+            self.missing = missing
+            self.changed = changed
+            self.stringsdict = stringsdict
+        }
+        public let language: String
+        public let new: [String]
+        public let missing: [String]
+        public let changed: [String]
+        public let stringsdict: [String]
+    }
 
     public struct KeyChangeSummary: Sendable {
         public init(new: [String] = [], missing: [String] = [], changed: [String] = [], stringsdict: [String] = []) {
@@ -25,9 +44,14 @@ public class LocalizationExtractorEngine {
     }
 
     private static let keyChangeStore = KeyChangeStore()
+    private static let fileChangeLogsStore = FileChangeLogStore()
 
     public static func lastKeyChanges() async -> KeyChangeSummary {
         await keyChangeStore.get()
+    }
+
+    public static func lastFileChangeLogs() async -> [FileLanguageChangeLog] {
+        await fileChangeLogsStore.get()
     }
 
     // MARK: - Scanning Swift Files
@@ -283,7 +307,9 @@ public class LocalizationExtractorEngine {
         let swiftFiles = getSwiftFiles(at: projectPath, log: log)
         log("🔵 Found \(swiftFiles.count) Swift files to scan.")
 
+        // Group extracted keys by file, and also accumulate all extracted keys (for per-language summary)
         var keysGroupedByFile = [String: Set<String>]()
+        var allExtractedKeys = Set<String>()
         for filePath in swiftFiles {
             if let content = try? String(contentsOfFile: filePath, encoding: .utf8) {
                 let fileName = URL(fileURLWithPath: filePath).lastPathComponent
@@ -291,76 +317,115 @@ public class LocalizationExtractorEngine {
                     let keyComments = extractLocalizedKeysAndComments(from: content, patterns: patterns, log: log)
                     for (key, comment) in keyComments {
                         keysGroupedByFile[fileName, default: []].update(with: key)
+                        allExtractedKeys.insert(key)
                         extractedComments[key] = comment
                     }
                 } else {
                     let keys = extractLocalizedKeys(from: content, patterns: patterns, log: log)
                     keysGroupedByFile[fileName, default: []].formUnion(keys)
+                    allExtractedKeys.formUnion(keys)
                 }
             }
         }
 
-        let allKeys = keysGroupedByFile.values.flatMap { $0 }
         let stringsdictKeys = loadStringsdictKeys(at: localizationBaseURL.path)
-        let filteredKeys = allKeys.filter { !stringsdictKeys.contains($0) }
-        log("🟢 Extracted \(filteredKeys.count) keys.")
-        if let firstLangDir = localizationFolders.first {
-            let langDirURL = localizationBaseURL.appendingPathComponent(firstLangDir)
-            let localizationFileURL = langDirURL.appendingPathComponent(localizationFileName)
-            let existingTranslations = loadExistingTranslations(from: localizationFileURL.path)
-            let existingComments = loadExistingComments(from: localizationFileURL.path)
-            Task {
-                await keyChangeStore.set(
-                    KeyChangeSummary(
-                        new: filteredKeys.filter { !existingTranslations.keys.contains($0) },
-                        missing: existingTranslations.keys.filter { !filteredKeys.contains($0) },
-                        changed: analyzeKeyChanges(
-                            extractedKeys: Set(filteredKeys),
-                            existingTranslations: existingTranslations,
-                            extractedComments: extractedComments,
-                            existingComments: existingComments
-                        ).changed,
-                        stringsdict: Array(stringsdictKeys).sorted()
-                    )
-                )
-            }
-        } else {
-            Task {
-                await keyChangeStore.set(.init(new: [], missing: [], changed: []))
-            }
-        }
+        let filteredKeys = allExtractedKeys.filter { !stringsdictKeys.contains($0) }
+        log("📊 Total unique keys extracted: \(allExtractedKeys.count)")
+        log("📊 Filtered keys (excluding stringsdict): \(filteredKeys.count)")
+        log("📊 stringsdict keys ignored: \(stringsdictKeys.count)")
+        log("🟢 Extracted \(allExtractedKeys.count) total keys (\(filteredKeys.count) after filtering out .stringsdict keys).")
+
+        // Per-language summary logs and file writes
+        var perLanguageLogs: [FileLanguageChangeLog] = []
 
         for langDir in localizationFolders {
             let langDirURL = localizationBaseURL.appendingPathComponent(langDir)
             let localizationFileURL = langDirURL.appendingPathComponent(localizationFileName)
             let existingTranslations = loadExistingTranslations(from: localizationFileURL.path)
-            var lines = [String]()
+            let existingComments = loadExistingComments(from: localizationFileURL.path)
+            let filteredKeysSet = Set(filteredKeys)
 
-            for (fileName, keys) in keysGroupedByFile.sorted(by: { $0.key < $1.key }) where !keys.isEmpty {
-                lines.append("\n/* ===== \(fileName) ===== */")
-                for key in keys.sorted().filter({ !stringsdictKeys.contains($0) }) {
-                    let value = existingTranslations[key] ?? key
-                    if includeComments {
-                        let comment = extractedComments[key] ?? key
-                        lines.append("/* \(comment) */\n\"\(key)\" = \"\(value)\";")
-                    } else {
-                        lines.append("\"\(key)\" = \"\(value)\";")
+            // Compute changes for this language
+            let summary = analyzeKeyChanges(
+                extractedKeys: filteredKeysSet,
+                existingTranslations: existingTranslations,
+                extractedComments: extractedComments,
+                existingComments: existingComments
+            )
+            let newKeys = summary.new
+            let missingKeys = summary.missing
+            let stringsdictIgnoredKeys = Array(stringsdictKeys).sorted()
+
+            // Write extracted keys to .strings file (once per language), grouped by file
+            var lines: [String] = []
+            let sortedFileKeys = keysGroupedByFile.sorted(by: { $0.key < $1.key })
+            for (fileName, keys) in sortedFileKeys {
+                if !keys.isEmpty {
+                    lines.append("\n/* ===== \(fileName) ===== */")
+                    for key in keys.sorted() where filteredKeysSet.contains(key) {
+                        let value = existingTranslations[key] ?? key
+                        if includeComments {
+                            let comment = extractedComments[key] ?? key
+                            lines.append("/* \(comment) */\n\"\(key)\" = \"\(value)\";")
+                        } else {
+                            lines.append("\"\(key)\" = \"\(value)\";")
+                        }
                     }
                 }
             }
-
+            // Store the log for this language
+            perLanguageLogs.append(FileLanguageChangeLog(
+                language: langDir,
+                new: newKeys,
+                missing: missingKeys,
+                changed: filteredKeysSet.sorted(),
+                stringsdict: stringsdictIgnoredKeys
+            ))
             let finalContent = lines.joined(separator: "\n")
             do {
                 try FileManager.default.createDirectory(at: langDirURL, withIntermediateDirectories: true, attributes: nil)
                 try finalContent.write(to: localizationFileURL, atomically: true, encoding: .utf8)
-                log("✅ Updated \(localizationFileURL.path)")
+                // log("✅ Updated \(localizationFileURL.path)")
             } catch {
                 log("❌ Failed to write to \(localizationFileURL.path): \(error.localizedDescription)")
             }
         }
+
+        // Store the per-language logs (for UI, etc)
+        Task {
+            await fileChangeLogsStore.set(perLanguageLogs)
+        }
+
+        // Set the last key changes for the first language as a convenience for UI
+        if let _ = localizationFolders.first, let firstLangLog = perLanguageLogs.first {
+            Task {
+                await keyChangeStore.set(
+                    KeyChangeSummary(
+                        new: firstLangLog.new,
+                        missing: firstLangLog.missing,
+                        changed: firstLangLog.changed,
+                        stringsdict: firstLangLog.stringsdict
+                    )
+                )
+            }
+        } else {
+            Task {
+                await keyChangeStore.set(.init(new: [], missing: [], changed: [], stringsdict: []))
+            }
+        }
+
+        // Print per-language summary logs
+        for langLog in perLanguageLogs {
+            log("")
+            log("🌐 \(langLog.language):")
+            log("🆕 New: \(langLog.new.count)")
+            log("🗑️ Deleted: \(langLog.missing.count)")
+            log("✏️ Extracted: \(filteredKeys.count)")
+            log("📦 Ignored (.stringsdict): \(langLog.stringsdict.count)")
+        }
+
         log("✅ Extraction completed at \(Date()).")
     }
-    // TODO: ADD Tests
     /// Detects localization languages by scanning the given base path for folders ending in `.lproj`.
     ///
     /// - Parameter basePath: The path to the localization base directory.
@@ -388,5 +453,17 @@ actor KeyChangeStore {
 
     func set(_ newValue: LocalizationExtractorEngine.KeyChangeSummary) {
         value = newValue
+    }
+}
+
+actor FileChangeLogStore {
+    private var logs: [LocalizationExtractorEngine.FileLanguageChangeLog] = []
+
+    func get() -> [LocalizationExtractorEngine.FileLanguageChangeLog] {
+        logs
+    }
+
+    func set(_ newLogs: [LocalizationExtractorEngine.FileLanguageChangeLog]) {
+        logs = newLogs
     }
 }

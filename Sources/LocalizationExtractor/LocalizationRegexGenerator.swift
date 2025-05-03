@@ -32,8 +32,7 @@ public struct LocalizationRegexGenerator {
 
         // Matches: MKLocalizedString("key", comment: "comment")
         if normalizedExample.contains("LocalizedString(") {
-            // Match function variants with optional comment
-            patterns.append(#"[A-Za-z_][\w]*LocalizedString\(\s*"((?:[^"\\]|\\.)+)"(?:\s*,\s*comment:\s*"((?:[^"\\]|\\.)+)")?\s*\)"#)
+            patterns.append(#"[A-Za-z_][\w]*LocalizedString\(\s*"((?:[^"\\]|\\.)+)"(?:\s*,\s*defaultValue:\s*\".*?\")?\s*,\s*comment:\s*\"([\s\S]*?)\"\s*\)"#)
         }
 
         // Matches: NSLocalizedString("key")
@@ -58,4 +57,3 @@ public struct LocalizationRegexGenerator {
         return patterns
     }
 }
-

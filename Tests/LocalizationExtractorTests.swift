@@ -71,11 +71,12 @@ struct LocalizationExtractorTests {
                 [#""((?:[^"\\]|\\.)+)"\s*\.localized"#]
             ),
             (
+                #"MKLocalizedString("my_key", comment: "My comment")"#,
+                [#"[A-Za-z_][\w]*LocalizedString\(\s*"((?:[^"\\]|\\.)+)"(?:\s*,\s*defaultValue:\s*\".*?\")?\s*,\s*comment:\s*\"([\s\S]*?)\"\s*\)"#]
+            ),
+            (
                 #"NSLocalizedString("save", comment: "Save comment")"#,
-                [
-                    #"[A-Za-z_][\w]*LocalizedString\(\s*"((?:[^"\\]|\\.)+)"(?:\s*,\s*comment:\s*"((?:[^"\\]|\\.)+)")?\s*\)"#,
-                    #"NSLocalizedString\(\s*"((?:[^"\\]|\\.)+)"\s*,\s*comment:\s*"((?:[^"\\]|\\.)+)"\s*\)"#
-                ]
+                [#"NSLocalizedString\(\s*"((?:[^"\\]|\\.)+)"\s*,\s*comment:\s*"((?:[^"\\]|\\.)+)"\s*\)"#]
             ),
             (
                 #"NSLocalizedString("plain_key")"#,
@@ -88,7 +89,7 @@ struct LocalizationExtractorTests {
         ]
 
         for (example, expected) in examplesAndExpectedPatterns {
-            let generated = LocalizationRegexGenerator.generatePatterns(from: example)
+            let generated = Set(LocalizationRegexGenerator.generatePatterns(from: example))
             for pattern in expected {
                 #expect(generated.contains(pattern), "Missing pattern: \(pattern) for example: \(example)")
             }
