@@ -45,6 +45,7 @@ public class LocalizationExtractorEngine {
 
     private static let keyChangeStore = KeyChangeStore()
     private static let fileChangeLogsStore = FileChangeLogStore()
+    private static let commentsStore = CommentsStore()
 
     public static func lastKeyChanges() async -> KeyChangeSummary {
         await keyChangeStore.get()
@@ -52,6 +53,10 @@ public class LocalizationExtractorEngine {
 
     public static func lastFileChangeLogs() async -> [FileLanguageChangeLog] {
         await fileChangeLogsStore.get()
+    }
+
+    public static func lastExtractedComments() async -> [String: String] {
+        await commentsStore.get()
     }
 
     // MARK: - Scanning Swift Files
@@ -227,7 +232,8 @@ public class LocalizationExtractorEngine {
             let valueChanged = oldValue != newValue
 
             let commentChanged: Bool
-            if let extractedComments, let newComment = extractedComments[key] {
+            if let extractedComments, let rawComment = extractedComments[key] {
+                let newComment = rawComment.components(separatedBy: "::").last
                 let existingComment = existingComments?[key]
                 commentChanged = existingComment != newComment
             } else {
@@ -318,7 +324,7 @@ public class LocalizationExtractorEngine {
                     for (key, comment) in keyComments {
                         keysGroupedByFile[fileName, default: []].update(with: key)
                         allExtractedKeys.insert(key)
-                        extractedComments[key] = comment
+                        extractedComments[key] = "\(fileName)::\(comment)"
                     }
                 } else {
                     let keys = extractLocalizedKeys(from: content, patterns: patterns, log: log)
@@ -326,6 +332,9 @@ public class LocalizationExtractorEngine {
                     allExtractedKeys.formUnion(keys)
                 }
             }
+        }
+        Task {
+            await commentsStore.set(extractedComments)
         }
 
         let stringsdictKeys = loadStringsdictKeys(at: localizationBaseURL.path)
@@ -465,5 +474,17 @@ actor FileChangeLogStore {
 
     func set(_ newLogs: [LocalizationExtractorEngine.FileLanguageChangeLog]) {
         logs = newLogs
+    }
+}
+
+actor CommentsStore {
+    private var comments: [String: String] = [:]
+
+    func get() -> [String: String] {
+        return comments
+    }
+
+    func set(_ new: [String: String]) {
+        comments = new
     }
 }
