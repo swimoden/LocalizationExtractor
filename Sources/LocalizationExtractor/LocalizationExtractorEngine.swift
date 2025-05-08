@@ -374,7 +374,9 @@ public class LocalizationExtractorEngine {
                     for key in keys.sorted() where filteredKeysSet.contains(key) {
                         let value = existingTranslations[key] ?? key
                         if includeComments {
-                            let comment = extractedComments[key] ?? key
+                            let rawComment = extractedComments[key] ?? key
+                            let parts = rawComment.components(separatedBy: "::")
+                            let comment = parts.count == 2 ? parts[1].trimmingCharacters(in: .whitespaces) : rawComment
                             lines.append("/* \(comment) */\n\"\(key)\" = \"\(value)\";")
                         } else {
                             lines.append("\"\(key)\" = \"\(value)\";")
